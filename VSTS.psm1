@@ -507,13 +507,67 @@ function Get-VstsProcess {
         Gets team project builds.
 #>
 function Get-VstsBuild {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="Query")]
     param(
         [Parameter(Mandatory)] $Session,
-        [Parameter(Mandatory)] $Project
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory, ParameterSetName = 'Id')][int] $Id,
+        [Parameter(ParameterSetName = 'Query')]
+        $Definitions,
+
+        [Parameter(ParameterSetName = 'Query')]
+        [ValidateSet('inProgress','completed','cancelling','postponed','notStarted','all')]
+        $StatusFilter,
+
+        [Parameter(ParameterSetName = 'Query')]
+        [ValidateSet('succeeded','partiallySucceeded','failed','canceled')]
+        $ResultFilter,
+
+        [Parameter(ParameterSetName = 'Query')]
+        $Top
     )
 
-    $Result = Invoke-VstsEndpoint -Session $Session -Path 'build/builds' -Project $Project -ApiVersion '2.0'
+    if ($PSCmdlet.ParameterSetName -eq 'Id'){
+        $path = "build/builds/$Id"
+        $queryParameters = $null
+    } else {
+        $path = "build/builds"
+        $queryParameters = @{ }
+        if($Definitions -ne $null){
+            $queryParameters["definitions"] = $Definitions
+        }
+        if($StatusFilter -ne $null){
+            $queryParameters["statusFilter"] = $StatusFilter
+        }
+        if($ResultFilter -ne $null){
+            $queryParameters["resultFilter"] = $ResultFilter
+        }
+        if($Top -ne $null){
+            $queryParameters['$top'] = $Top
+        }
+    }
+
+    $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '2.0'
+    if($PSCmdlet.ParameterSetName -eq 'Id'){
+        $Result
+    }
+    else {
+        $Result.Value
+    }
+}
+
+<#
+    .SYNOPSIS
+        Gets team project build artifacts.
+#>
+function Get-VstsBuildArtifacts {
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory)][int] $Id
+    )
+
+    $Result = Invoke-VstsEndpoint -Session $Session -Path "build/builds/$Id/artifacts" -Project $Project -ApiVersion '2.0'
     $Result.Value
 }
 
@@ -522,14 +576,43 @@ function Get-VstsBuild {
         Gets team project build definitions.
 #>
 function Get-VstsBuildDefinition {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="All")]
     param(
         [Parameter(Mandatory)] $Session,
-        [Parameter(Mandatory)] $Project
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory, ParameterSetName = 'Id')][int] $Id,
+        [Parameter(Mandatory, ParameterSetName = 'Name')][string] $Name
     )
+    
+    $queryParameters = $null
+    if ($PSCmdlet.ParameterSetName -eq 'Id')
+    {
+        $path = "build/definitions/$Id"
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq 'Name')
+    {
+        $path = 'build/definitions'
+        $queryParameters = @{ name = $Name }
+    }
+    else
+    {
+        $path = 'build/definitions'
+    }
 
-    $Result = Invoke-VstsEndpoint -Session $Session -Path 'build/definitions' -Project $Project -ApiVersion '2.0'
-    $Result.Value
+    $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '2.0'
+
+    if($PSCmdlet.ParameterSetName -eq 'Id')
+    {
+        $Result
+    }
+    elseif($PSCmdlet.ParameterSetName -eq 'Name')
+    {
+        $Result.Value[0]
+    }
+    else
+    {
+        $Result.Value
+    }
 }
 
 <#
