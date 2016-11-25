@@ -20,8 +20,10 @@ https://www.visualstudio.com/en-us/integrate/api/overview
 	- Get-VstsWorkItemQuery
 - Build
 	- Get-VstsBuild
+	- Get-VstsBuildArtifacts
+	- Get-VstsBuildArtifactFile
 	- Get-VstsBuildDefinition
-- Code	
+- Code
 	- Policy
 		- Get-VstsCodePolicy
 		- New-VstsCodePolicy

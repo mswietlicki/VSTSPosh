@@ -580,7 +580,7 @@ function Get-VstsBuildArtifacts {
 
 <#
     .SYNOPSIS
-        Gets team project build artifacts.
+        Downloads team project build artifact zipped content.
 #>
 function Get-VstsBuildArtifactFile {
     param(

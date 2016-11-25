@@ -12,6 +12,8 @@ $FunctionsToExport = @(
 'New-VstsSession',
 'Get-VstsProcess',
 'Get-VstsBuild',
+'Get-VstsBuildArtifacts',
+'Get-VstsBuildArtifactFile',
 'Get-VstsBuildDefinition',
 'ConvertTo-VstsGitRepository')
 
