@@ -39,7 +39,8 @@ function Invoke-VstsEndpoint {
         [Parameter()][uri] $Path,
         [Parameter()][string] $ApiVersion = '1.0',
         [Parameter()][ValidateSet('GET','PUT','POST','DELETE','PATCH')] $Method = 'GET',
-        [Parameter()][string] $Body
+        [Parameter()][string] $Body,
+        [Parameter()][string] $OutFile
     )
 
     $queryString = [System.Web.HttpUtility]::ParseQueryString([string]::Empty)
@@ -89,6 +90,10 @@ function Invoke-VstsEndpoint {
         }
 
         Invoke-RestMethod $Uri -Method $Method -ContentType $ContentType -Headers @{ Authorization = $authorization } -Body $Body
+    }
+    elseif ($OutFile -ne $null)
+    {
+        Invoke-RestMethod $Uri -Method $Method -ContentType $ContentType -Headers @{ Authorization = $authorization } -OutFile $OutFile
     }
     else
     {
@@ -511,9 +516,11 @@ function Get-VstsBuild {
     param(
         [Parameter(Mandatory)] $Session,
         [Parameter(Mandatory)] $Project,
-        [Parameter(Mandatory, ParameterSetName = 'Id')][int] $Id,
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
+        [int] $Id,
+
         [Parameter(ParameterSetName = 'Query')]
-        $Definitions,
+        $DefinitionId,
 
         [Parameter(ParameterSetName = 'Query')]
         [ValidateSet('inProgress','completed','cancelling','postponed','notStarted','all')]
@@ -533,8 +540,8 @@ function Get-VstsBuild {
     } else {
         $path = "build/builds"
         $queryParameters = @{ }
-        if($Definitions -ne $null){
-            $queryParameters["definitions"] = $Definitions
+        if($DefinitionId -ne $null){
+            $queryParameters["definitions"] = $DefinitionId
         }
         if($StatusFilter -ne $null){
             $queryParameters["statusFilter"] = $StatusFilter
@@ -564,11 +571,27 @@ function Get-VstsBuildArtifacts {
     param(
         [Parameter(Mandatory)] $Session,
         [Parameter(Mandatory)] $Project,
-        [Parameter(Mandatory)][int] $Id
+        [Parameter(Mandatory)][int] $BuildId
     )
 
-    $Result = Invoke-VstsEndpoint -Session $Session -Path "build/builds/$Id/artifacts" -Project $Project -ApiVersion '2.0'
+    $Result = Invoke-VstsEndpoint -Session $Session -Path "build/builds/$BuildId/artifacts" -Project $Project -ApiVersion '2.0'
     $Result.Value
+}
+
+<#
+    .SYNOPSIS
+        Gets team project build artifacts.
+#>
+function Get-VstsBuildArtifactFile {
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory)][int] $BuildId,
+        [Parameter(Mandatory)][string] $Name,
+        [Parameter(Mandatory)][string] $OutFile
+    )
+
+    Invoke-VstsEndpoint -Session $Session -Path "build/builds/$BuildId/artifacts/$Name" -QueryStringParameters @{ '$format' = "zip" } -Project $Project -ApiVersion '2.0' -OutFile $OutFile
 }
 
 <#
@@ -583,7 +606,7 @@ function Get-VstsBuildDefinition {
         [Parameter(Mandatory, ParameterSetName = 'Id')][int] $Id,
         [Parameter(Mandatory, ParameterSetName = 'Name')][string] $Name
     )
-    
+
     $queryParameters = $null
     if ($PSCmdlet.ParameterSetName -eq 'Id')
     {
