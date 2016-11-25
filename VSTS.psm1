@@ -568,6 +568,7 @@ function Get-VstsBuild {
         Gets team project build artifacts.
 #>
 function Get-VstsBuildArtifacts {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory)] $Session,
         [Parameter(Mandatory)] $Project,
@@ -583,6 +584,7 @@ function Get-VstsBuildArtifacts {
         Downloads team project build artifact zipped content.
 #>
 function Get-VstsBuildArtifactFile {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory)] $Session,
         [Parameter(Mandatory)] $Project,
