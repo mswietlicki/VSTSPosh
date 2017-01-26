@@ -499,7 +499,7 @@ function Get-VstsGitRepository {
 
 <#
     .SYNOPSIS
-        Gets vsts git repositories.
+        Gets vsts git pull requests.
 #>
 function Get-VstsGitPullRequests {
     [CmdletBinding(DefaultParameterSetName="Project")]
