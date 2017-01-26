@@ -196,7 +196,7 @@ function New-VstsProject {
 
     if ($PSBoundParameters.ContainsKey('TemplateTypeName'))
     {
-        $TemplateTypeId = Get-VstsProcess -Session $Session | Where Name -EQ $TemplateTypeName | Select -ExpandProperty Id
+        $TemplateTypeId = Get-VstsProcess -Session $Session | Where-Object Name -EQ $TemplateTypeName | Select-Object -ExpandProperty Id
         if ($TemplateTypeId -eq $null)
         {
             throw "Template $TemplateTypeName not found."
@@ -243,7 +243,7 @@ function Remove-VstsProject {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
-    $Id = Get-VstsProject -Session $Session -Name $Name | Select -ExpandProperty Id
+    $Id = Get-VstsProject -Session $Session -Name $Name | Select-Object -ExpandProperty Id
 
     if ($Id -eq $null)
     {
@@ -381,7 +381,7 @@ function New-VstsGitRepository {
 
     if (-not (Test-Guid $Project))
     {
-        $Project = Get-VstsProject -Session $Session -Name $Project | Select -ExpandProperty Id
+        $Project = Get-VstsProject -Session $Session -Name $Project | Select-Object -ExpandProperty Id
     }
 
     $Body = @{
@@ -673,7 +673,7 @@ function New-VstsBuildDefinition {
 
     if (-not (Test-Guid -Input $Queue))
     {
-        $Queue = Get-VstsBuildQueue -Session $Session | Where Name -EQ $Queue | Select -ExpandProperty Id
+        $Queue = Get-VstsBuildQueue -Session $Session | Where-Object Name -EQ $Queue | Select-Object -ExpandProperty Id
     }
 
     $Body = @{
