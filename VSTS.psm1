@@ -45,10 +45,8 @@ function Invoke-VstsEndpoint {
 
     $queryString = [System.Web.HttpUtility]::ParseQueryString([string]::Empty)
 
-    if ($QueryStringParameters -ne $null)
-    {
-        foreach ($parameter in $QueryStringParameters.GetEnumerator())
-        {
+    if ($QueryStringParameters -ne $null) {
+        foreach ($parameter in $QueryStringParameters.GetEnumerator()) {
             $queryString[$parameter.Key] = $parameter.Value
         }
     }
@@ -57,23 +55,19 @@ function Invoke-VstsEndpoint {
     $queryString = $queryString.ToString();
 
     $authorization = Get-VstsAuthorization -User $Session.User -Token $Session.Token
-    if ([string]::IsNullOrEmpty($Session.AccountName))
-    {
+    if ([string]::IsNullOrEmpty($Session.AccountName)) {
         $UriBuilder = New-Object System.UriBuilder -ArgumentList "$($Session.Scheme)://$($Session.Server)"
     }
-    else
-    {
+    else {
         $UriBuilder = New-Object System.UriBuilder -ArgumentList "$($Session.Scheme)://$($Session.AccountName).visualstudio.com"
     }
     $Collection = $Session.Collection
 
     $UriBuilder.Query = $queryString
-    if ([string]::IsNullOrEmpty($Project))
-    {
+    if ([string]::IsNullOrEmpty($Project)) {
         $UriBuilder.Path = "$Collection/_apis/$Path"
     }
-    else
-    {
+    else {
         $UriBuilder.Path = "$Collection/$Project/_apis/$Path"
     }
 
@@ -82,21 +76,17 @@ function Invoke-VstsEndpoint {
     Write-Verbose "Invoke URI [$uri]"
 
     $ContentType = 'application/json'
-    if ($Method -eq 'PUT' -or $Method -eq 'POST' -or $Method -eq 'PATCH')
-    {
-        if ($Method -eq 'PATCH')
-        {
+    if ($Method -eq 'PUT' -or $Method -eq 'POST' -or $Method -eq 'PATCH') {
+        if ($Method -eq 'PATCH') {
             $ContentType = 'application/json-patch+json'
         }
 
         Invoke-RestMethod $Uri -Method $Method -ContentType $ContentType -Headers @{ Authorization = $authorization } -Body $Body
     }
-    elseif ($OutFile -ne $null)
-    {
+    elseif ($OutFile -ne $null) {
         Invoke-RestMethod $Uri -Method $Method -ContentType $ContentType -Headers @{ Authorization = $authorization } -OutFile $OutFile
     }
-    else
-    {
+    else {
         Invoke-RestMethod $Uri -Method $Method -ContentType $ContentType -Headers @{ Authorization = $authorization }
     }
 }
@@ -129,19 +119,16 @@ function Get-VstsProject {
         [Parameter(Mandatory,ParameterSetName = 'Session')] $Session,
         [Parameter()][string] $Name)
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
     $Value = Invoke-VstsEndpoint -Session $Session -Path 'projects'
 
-    if ($PSBoundParameters.ContainsKey("Name"))
-    {
+    if ($PSBoundParameters.ContainsKey("Name")) {
         $Value.Value | Where-Object Name -EQ $Name
     }
-    else
-    {
+    else {
         $Value.Value
     }
 }
@@ -165,8 +152,7 @@ function Wait-VSTSProject {
         $Retries++
     } while ((($TeamProject -eq $null -and $Exists) -or ($TeamProject -ne $null -and -not $Exists)) -and $Retries -le $Attempts)
 
-    if (($TeamProject -eq $null -and $Exists) -or ($TeamProject -ne $null -and -not $Exists))
-    {
+    if (($TeamProject -eq $null -and $Exists) -or ($TeamProject -ne $null -and -not $Exists)) {
         throw "Failed to create team project!"
     }
 }
@@ -189,16 +175,13 @@ function New-VstsProject {
         [Parameter()] $TemplateTypeName = 'Agile',
         [Parameter()][switch] $Wait)
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
-    if ($PSBoundParameters.ContainsKey('TemplateTypeName'))
-    {
+    if ($PSBoundParameters.ContainsKey('TemplateTypeName')) {
         $TemplateTypeId = Get-VstsProcess -Session $Session | Where-Object Name -EQ $TemplateTypeName | Select-Object -ExpandProperty Id
-        if ($TemplateTypeId -eq $null)
-        {
+        if ($TemplateTypeId -eq $null) {
             throw "Template $TemplateTypeName not found."
         }
     }
@@ -218,8 +201,7 @@ function New-VstsProject {
 
     Invoke-VstsEndpoint -Session $Session -Path 'projects' -Method POST -Body $Body
 
-    if ($Wait)
-    {
+    if ($Wait) {
         Wait-VSTSProject -Session $Session -Name $Name -Exists
     }
 }
@@ -238,22 +220,19 @@ function Remove-VstsProject {
         [Parameter(Mandatory)] $Name,
         [Parameter()][switch] $Wait)
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
     $Id = Get-VstsProject -Session $Session -Name $Name | Select-Object -ExpandProperty Id
 
-    if ($Id -eq $null)
-    {
+    if ($Id -eq $null) {
         throw "Project $Name not found in $AccountName."
     }
 
     Invoke-VstsEndpoint -Session $Session -Path "projects/$Id" -Method DELETE
 
-    if ($Wait)
-    {
+    if ($Wait) {
         Wait-VSTSProject -Session $Session -Name $Name
     }
 }
@@ -271,8 +250,7 @@ function Get-VstsWorkItem {
         [Parameter(Mandatory,ParameterSetName = 'Session')] $Session,
         [Parameter(Mandatory)] $Id)
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
@@ -295,15 +273,12 @@ function New-VstsWorkItem {
         [Parameter(Mandatory)][string] $WorkItemType
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
-    if ($PropertyHashtable -ne $null)
-    {
-        $Fields = foreach ($kvp in $PropertyHashtable.GetEnumerator())
-        {
+    if ($PropertyHashtable -ne $null) {
+        $Fields = foreach ($kvp in $PropertyHashtable.GetEnumerator()) {
             [PSCustomObject]@{
                 op = 'add'
                 Path = '/fields/' + $kvp.Key
@@ -313,8 +288,7 @@ function New-VstsWorkItem {
 
         $Body = $Fields | ConvertTo-Json
     }
-    else
-    {
+    else {
         $Body = [string]::Empty
     }
 
@@ -336,22 +310,17 @@ function Get-VstsWorkItemQuery {
         [Parameter()] $FolderPath
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
     $Result = Invoke-VstsEndpoint -Session $Session -Project $Project -Path 'wit/queries' -QueryStringParameters @{ depth = 1 }
 
-    foreach ($value in $Result.Value)
-    {
-        if ($Value.isFolder -and $Value.hasChildren)
-        {
+    foreach ($value in $Result.Value) {
+        if ($Value.isFolder -and $Value.hasChildren) {
             Write-Verbose "$Value.Name"
-            foreach ($child in $value.Children)
-            {
-                if (-not $child.isFolder)
-                {
+            foreach ($child in $value.Children) {
+                if (-not $child.isFolder) {
                     $child
                 }
             }
@@ -374,13 +343,11 @@ function New-VstsGitRepository {
         [Parameter(Mandatory)] $RepositoryName
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
-    if (-not (Test-Guid $Project))
-    {
+    if (-not (Test-Guid $Project)) {
         $Project = Get-VstsProject -Session $Session -Name $Project | Select-Object -ExpandProperty Id
     }
 
@@ -408,8 +375,7 @@ function Get-VstsGitRepository {
         [Parameter(Mandatory)] $Project
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
@@ -431,8 +397,7 @@ function Get-VstsCodePolicy {
         [Parameter(Mandatory)] $Project
     )
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
@@ -458,13 +423,11 @@ function New-VstsCodePolicy {
     )
 
     $RepoId = $null
-    if ($RepositoryId -ne [guid]::Empty)
-    {
+    if ($RepositoryId -ne [guid]::Empty) {
         $RepoId = $RepositoryId.ToString()
     }
 
-    $scopes = foreach ($branch in $Branches)
-    {
+    $scopes = foreach ($branch in $Branches) {
         @{
             repositoryId = $RepoId
             refName = "refs/heads/$branch"
@@ -485,8 +448,7 @@ function New-VstsCodePolicy {
         }
     } | ConvertTo-Json -Depth 10
 
-    if ($PSCmdlet.ParameterSetName -eq 'Account')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Account') {
         $Session = New-VstsSession -AccountName $AccountName -User $User -Token $Token
     }
 
@@ -528,6 +490,70 @@ function Get-VstsGitRepository {
 
     $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '1.0'
     if($PSCmdlet.ParameterSetName -eq 'Name'){
+        $Result
+    }
+    else {
+        $Result.Value
+    }
+}
+
+<#
+    .SYNOPSIS
+        Gets vsts git repositories.
+#>
+function Get-VstsGitPullRequests {
+    [CmdletBinding(DefaultParameterSetName="Project")]
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory, ParameterSetName = 'Id')][int] $Id,
+        [Parameter(Mandatory, ParameterSetName = 'Id')]
+        [Parameter(Mandatory, ParameterSetName = 'Repository')][string] $Repository,
+        [Parameter()][ValidateSet('Active','Abandoned','Completed')][string] $Status,
+        [Parameter()][guid] $CreatorId,
+        [Parameter()][guid] $ReviewerId,
+        [Parameter()][string] $SourceBranch,
+        [Parameter()][string] $TargetBranch,
+        [Parameter()][int] $Top,
+        [Parameter()][int] $Skip
+    )
+
+    $queryParameters = @{ }
+    if($Status -ne $null){
+        $queryParameters["status"] = $Status
+    }
+    if($CreatorId -ne $null){
+        $queryParameters["creatorId"] = $CreatorId
+    }
+    if($ReviewerId -ne $null){
+        $queryParameters["reviewerId"] = $ReviewerId
+    }
+    if($SourceBranch -ne $null){
+        $queryParameters["sourceRefName"] = $SourceBranch
+    }
+    if($TargetBranch -ne $null){
+        $queryParameters["targetRefName"] = $TargetBranch
+    }
+    if($Top -ne $null){
+        $queryParameters['$top'] = $Top
+    }
+    if($Skip -ne $null){
+        $queryParameters['$skip'] = $Skip
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'Id') {
+        $path = "git/repositories/$Repository/pullRequests/$Id"
+        $queryParameters = $null
+    }
+    if ($PSCmdlet.ParameterSetName -eq 'Project') {
+        $path = "git/pullRequests"
+    }
+    if ($PSCmdlet.ParameterSetName -eq 'Repository') {
+        $path = "git/repositories/$Repository/pullRequests"
+    }
+
+    $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '3.0'
+    if($PSCmdlet.ParameterSetName -eq 'Id'){
         $Result
     }
     else {
@@ -638,32 +664,26 @@ function Get-VstsBuildDefinition {
     )
 
     $queryParameters = $null
-    if ($PSCmdlet.ParameterSetName -eq 'Id')
-    {
+    if ($PSCmdlet.ParameterSetName -eq 'Id') {
         $path = "build/definitions/$Id"
     }
-    elseif ($PSCmdlet.ParameterSetName -eq 'Name')
-    {
+    elseif ($PSCmdlet.ParameterSetName -eq 'Name') {
         $path = 'build/definitions'
         $queryParameters = @{ name = $Name }
     }
-    else
-    {
+    else {
         $path = 'build/definitions'
     }
 
     $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '2.0'
 
-    if($PSCmdlet.ParameterSetName -eq 'Id')
-    {
+    if($PSCmdlet.ParameterSetName -eq 'Id') {
         $Result
     }
-    elseif($PSCmdlet.ParameterSetName -eq 'Name')
-    {
+    elseif($PSCmdlet.ParameterSetName -eq 'Name') {
         $Result.Value[0]
     }
-    else
-    {
+    else {
         $Result.Value
     }
 }
@@ -699,8 +719,7 @@ function New-VstsBuildDefinition {
         [Parameter(Mandatory)][PSCustomObject] $Repository
     )
 
-    if (-not (Test-Guid -Input $Queue))
-    {
+    if (-not (Test-Guid -Input $Queue)) {
         $Queue = Get-VstsBuildQueue -Session $Session | Where-Object Name -EQ $Queue | Select-Object -ExpandProperty Id
     }
 
@@ -826,14 +845,12 @@ function ConvertTo-VstsGitRepository {
     )
 
     $GitCommand = Get-Command git
-    if ($GitCommand -eq $null -or $GitCommand.CommandType -ne 'Application' -or $GitCommand.name -ne 'git.exe')
-    {
+    if ($GitCommand -eq $null -or $GitCommand.CommandType -ne 'Application' -or $GitCommand.name -ne 'git.exe') {
         throw "Git-tfs needs to be installed to use this command. See https://github.com/git-tfs/git-tfs. You can install with Chocolatey: cinst gittfs"
     }
 
     $GitTfsCommand = Get-Command git-tfs
-    if ($GitTfsCommand -eq $null -or $GitTfsCommand.CommandType -ne 'Application' -or $GitTfsCommand.name -ne 'git-tfs.exe')
-    {
+    if ($GitTfsCommand -eq $null -or $GitTfsCommand.CommandType -ne 'Application' -or $GitTfsCommand.name -ne 'git-tfs.exe') {
         throw "Git-tfs needs to be installed to use this command. See https://github.com/git-tfs/git-tfs. You can install with Chocolatey: cinst gittfs"
     }
 
