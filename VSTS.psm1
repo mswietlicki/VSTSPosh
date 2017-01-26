@@ -138,7 +138,7 @@ function Get-VstsProject {
 
     if ($PSBoundParameters.ContainsKey("Name"))
     {
-        $Value.Value | Where Name -EQ $Name
+        $Value.Value | Where-Object Name -EQ $Name
     }
     else
     {
@@ -505,6 +505,34 @@ function Get-VstsProcess {
 
     $Result = Invoke-VstsEndpoint -Session $Session -Path 'process/processes'
     $Result.Value
+}
+
+<#
+    .SYNOPSIS
+        Gets vsts git repositories.
+#>
+function Get-VstsGitRepository {
+    [CmdletBinding(DefaultParameterSetName="All")]
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory, ParameterSetName = 'Name')]
+        [string] $Name
+    )
+
+    if ($PSCmdlet.ParameterSetName -eq 'Name'){
+        $path = "git/repositories/$Name"
+    } else {
+        $path = "git/repositories"
+    }
+
+    $Result = Invoke-VstsEndpoint -Session $Session -Path $path -QueryStringParameters $queryParameters -Project $Project -ApiVersion '1.0'
+    if($PSCmdlet.ParameterSetName -eq 'Name'){
+        $Result
+    }
+    else {
+        $Result.Value
+    }
 }
 
 <#
