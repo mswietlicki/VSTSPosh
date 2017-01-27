@@ -565,6 +565,35 @@ function Get-VstsGitPullRequests {
     .SYNOPSIS
         Creates a new project in a VSTS account
 #>
+function Add-VstsGitPullRequestVote {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)][string] $Repository,
+        [Parameter(Mandatory)][int] $PullRequestId,
+        [Parameter(Mandatory)][string] $Reviewer,
+        [Parameter(Mandatory)][ValidateSet('Rejected','WaitingForAuthor','NoResponse','ApprovedWithSuggestions','Approved')][string] $Vote)
+
+    switch ($Vote) {
+        "Rejected" { $VoteIndex = -10 }
+        "WaitingForAuthor" { $VoteIndex = -5 }
+        "NoResponse" { $VoteIndex = 0 }
+        "ApprovedWithSuggestions" { $VoteIndex = 5 }
+        "Approved" { $VoteIndex = 10 }
+        Default { $VoteIndex = 0}
+    }
+
+    $Body = @{
+        vote = $VoteIndex
+    } | ConvertTo-Json
+
+    Invoke-VstsEndpoint -Session $Session -Path "git/repositories/$Repository/pullRequests/$PullRequestId/reviewers/$Reviewer" -Method PUT -Body $Body -ApiVersion '3.0'
+}
+
+<#
+    .SYNOPSIS
+        Creates a new project in a VSTS account
+#>
 function New-VstsGitPullRequest {
     [CmdletBinding()]
     param(
