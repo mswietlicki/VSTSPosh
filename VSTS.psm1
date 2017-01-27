@@ -563,6 +563,35 @@ function Get-VstsGitPullRequests {
 
 <#
     .SYNOPSIS
+        Creates a new project in a VSTS account
+#>
+function New-VstsGitPullRequest {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $Session,
+        [Parameter(Mandatory)] $Project,
+        [Parameter(Mandatory)][string] $Repository,
+        [Parameter(Mandatory)][string] $SourceBranch,
+        [Parameter(Mandatory)][string] $TargetBranch,
+        [Parameter(Mandatory)][string] $Title,
+        [Parameter()][string] $Description,
+        [Parameter(Mandatory)][string] $Reviewers)
+
+    $Body = @{
+        sourceRefName = $SourceBranch
+        targetRefName = $TargetBranch
+        title = $Title
+        description = $Description
+        reviewers = @(@{
+            id = $Reviewers
+        })
+    } | ConvertTo-Json
+
+    Invoke-VstsEndpoint -Session $Session -Path "git/repositories/$Repository/pullRequests" -Project $Project -Method POST -Body $Body
+}
+
+<#
+    .SYNOPSIS
         Gets team project builds.
 #>
 function Get-VstsBuild {
